@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@200;300;400;500&family=Roboto:wght@300;400;500&display=swap');
+
+html, body {
+    font-family: 'Roboto', Prompt, Tahoma, Verdana, sans-serif;
+    font-weight: normal;
+    font-style: normal;
+}
+
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1200px;
+    }
+}
+
+.jumbo-bg {
+    background: url('/img/jumbo-bg3.jpg') no-repeat;
+    background-position: center center;
+    background-color: #FCF8ED;
+    background-size: cover;
+}
+
+.corner-bg {
+    width: 660px;
+    height: 90%;
+    object-fit: cover;
+    position: absolute;
+    right: 0;
+    z-index: 1;
+}
+
+.info-bg {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url('/img/bg.jpg');
+    background-repeat: no-repeat;
+    background-position: bottom;
+    background-size: cover;
+}
+
+.img-user-profile {
+    height: 200px;
+    width: 200px;
+    object-fit: cover;
+    object-position: center;
+}
+
+.form-outline .form-control, .select {
+    background: white !important;
+}
+
+.course-cover {
+    height: 126px;
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.course-owner-img {
+    width: 86px;
+    height: 86px;
+    object-fit: cover;
+    object-position: center;
+    position: absolute;
+    right: 25px;
+    top: 78px;
+}
+
+.course-grid {
+    height: 310px;
+}
+
+.assignment-list {
+    list-style-type: none;
+    line-height: 23px;
+}
+
+.btn-actions {
+    position: absolute;
+    right: 7%;
+    top: -24px;
+}
+
+.modal {
+    overflow-y: auto;
+}
