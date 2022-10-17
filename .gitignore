@@ -125,3 +125,9 @@ nb-configuration.xml
 /phpunit*.xml
 /.phpunit.*.cache
 
+#-------------------------
+# Uploaded punlic file
+#-------------------------
+
+/public/uploads/
+/public/null/

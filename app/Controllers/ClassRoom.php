@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\ClassRoomModel;
 use App\Models\AnnouncementModel;
 use App\Models\AssignmentModel;
+use App\Models\LessionModel;
 use Config\Database;
 use Config\Services;
 
@@ -17,6 +18,7 @@ class ClassRoom extends BaseController
         $this->assign = new AssignmentModel();
         $this->annoce = new AnnouncementModel();
         $this->classroom = new ClassRoomModel();
+        $this->lession = new LessionModel();
         $this->db = Database::connect();
     }
     private function getClassMember($class_id)
@@ -35,7 +37,9 @@ class ClassRoom extends BaseController
         WHERE
             b.class_id = " . $class_id . " 
         ) AS 'owner_name',
+        universities.id AS `university_id`,
         universities.university,
+        classroom.class_id,
         classroom.class_owner,
         classroom.class_name,
         classroom.class_description,
@@ -61,7 +65,78 @@ class ClassRoom extends BaseController
         	meeting
         WHERE
         	meeting.end_at IS NULL AND
-        	meeting.class_id = ".$class_id."")->getResult();
+        	meeting.class_id = " . $class_id . "")->getResult();
+        return $result;
+    }
+    private function getAssignedAssignments($class_id)
+    {
+        $result = $this->db->query("SELECT
+        assignments.a_name,
+        assignments.a_id,
+        assignments.a_score,
+        assignments.created_at,
+        (
+        SELECT COUNT(CASE WHEN user_assignment.`status` = 1 THEN 1 END) FROM user_assignment WHERE user_assignment.a_id = assignments.a_id
+        ) AS `submitted`
+        FROM
+            assignments
+        WHERE
+            assignments.a_classid = " . $class_id . " AND assignments.deleted_at IS NULL
+        ORDER BY
+            assignments.created_at DESC
+            ")->getResult();
+        return $result;
+    }
+    private function getAssignmentList($class_id, $user_id)
+    {
+        if (!empty($user_id)) {
+            $classSearch = (!empty($class_id)) ? "assignments.a_classid =" . $class_id . " AND " : null;
+            $result = $this->db->query("SELECT
+                classroom.class_id,
+                classroom.class_name,
+                assignments.a_name,
+                assignments.a_id,
+                assignments.a_instruction,
+                assignments.a_score `assign_score`,
+                IFNULL( user_assignment.score, 0 ) AS `user_score`,
+                IFNULL( user_assignment.`status`, 0 ) AS `status`,
+                assignments.due_date 
+            FROM
+                assignments
+                LEFT JOIN user_assignment ON assignments.a_id = user_assignment.a_id 
+                AND user_assignment.user_id = " . $user_id . " 
+                INNER JOIN
+                classroom
+                ON
+                    assignments.a_classid = classroom.class_id
+            WHERE
+                " . $classSearch . "
+                assignments.due_date > NOW() 
+            HAVING `status` = 0")->getResult();
+            return $result;
+        }
+    }
+    private function getFiles($class_id)
+    {
+        $result = $this->db->query("SELECT
+        assignment_attachments.attach_name, 
+        assignment_attachments.attach_size, 
+        assignment_attachments.uploaded_at, 
+        assignment_attachments.attach_link,
+        CONCAT(users.fname, ' ' ,users.lname) AS `name`
+        FROM
+	assignment_attachments
+	INNER JOIN
+	assignments
+	ON 
+		assignment_attachments.assignment_id = assignments.a_id
+	INNER JOIN
+	users
+	ON 
+		assignment_attachments.attach_owner = users.id
+WHERE
+	assignments.a_classid = " . $class_id . "")->getResult();
+
         return $result;
     }
     public function index($class_id)
@@ -72,7 +147,10 @@ class ClassRoom extends BaseController
             'class_id' => $class_id,
             'classInfo' => $classInfo,
             'classMembers' => $this->getClassMember($class_id),
-            'meeting' => $this->getMeeting($class_id)
+            'meeting' => $this->getMeeting($class_id),
+            'assignments' => ($this->session->get('id') != $classInfo->class_owner) ? $this->getAssignedAssignments($class_id) : $this->getAssignmentList($classInfo->class_id, $this->session->get('id')),
+            'files' => $this->getFiles($class_id),
+            'lessions' => $this->lession->where('class_id', $class_id)->select(['less_title', 'les_id'])->findAll()
         ]);
         echo view('templates/footer');
     }
@@ -147,7 +225,7 @@ class ClassRoom extends BaseController
         echo view('templates/header', ['title' => 'เพิ่มงานไปยังชั้นเรียน']);
         switch ($this->request->getGet('type')) {
             case '1':
-                echo view('classroom/t_assign');
+                echo view('classroom/t_assign', ['class_id' => $class_id]);
                 break;
 
             default:
@@ -160,10 +238,133 @@ class ClassRoom extends BaseController
     public function createAssignment()
     {
         $form_data = $this->request->getPost();
-        $user_id = $this->session->get('id');
-
-        if ($this->assign->insert($form_data)) {
+        $form_data['status'] = 1;
+        $form_data['due_date'] = (empty($form_data['due_date'])) ? "9999-01-01 00:00" : $form_data['due_date'];
+        $form_data['due_date'] = str_replace("/", "-", $form_data['due_date']);
+        $form_data['due_date'] = date("Y-m-d H:i:s", strtotime($form_data['due_date']));
+        if ($insertedID = $this->assign->insert($form_data)) {
+            return $this->response->setJson(['status' => true, 'lastInsertID' => $insertedID]);
         } else {
+            return $this->response->setJson(['status' => false]);
         }
+    }
+
+    public function editAssignment($class_id)
+    {
+        echo view('templates/header', ['title' => 'แก้ไขชั้นเรียน']);
+        echo view('classroom/class_settings', ['classInfo' => $this->getClassInfo($class_id), 'university' => $this->db->table('universities')->select(['id', 'university'])->get()->getResult()]);
+        echo view('templates/footer');
+    }
+    public function saveEditedClass()
+    {
+        $form_data = $this->request->getPost();
+        $class_id = $this->request->getGet('class_id');
+
+        $result = $this->db->table('classroom')->where('class_id', $class_id)->update($form_data);
+
+        if ($result) {
+            return $this->response->setJson(['status' => true]);
+        } else {
+            return $this->response->setJson(['status' => false]);
+        }
+    }
+
+    public function viewUserScore()
+    {
+        $user_id = $this->session->get('id');
+        $score = $this->db->query("SELECT
+            assignments.a_name, 
+            user_assignment.score AS userscore, 
+            assignments.a_score AS score, 
+            classroom.class_name,
+            user_assignment.submitted_at
+        FROM
+            user_assignment
+            INNER JOIN
+            assignments
+            ON 
+                user_assignment.a_id = assignments.a_id
+            INNER JOIN
+            classroom
+            ON 
+                assignments.a_classid = classroom.class_id
+        WHERE
+            user_assignment.user_id = " . $user_id . "
+            AND user_assignment.status = 1
+        ORDER BY
+            user_assignment.submitted_at DESC
+            ")->getResult();
+        echo view('templates/header', ['title' => 'คะแนนของฉัน']);
+        echo view('classroom/myscore', ['myscores' => $score]);
+        echo view('templates/footer');
+    }
+
+    public function createLession($class_id)
+    {
+        echo view('templates/header', ['title' => 'เพิ่มบทเรียน']);
+        echo view('classroom/create_lession', ['class_id' => $class_id]);
+        echo view('templates/footer');
+    }
+    public function viewLession($class_id)
+    {
+        $less_id = $this->request->getGet('id');
+        $lession_data = $this->lession->select(['class_id', 'less_title', 'less_content'])->find($less_id);
+        $classInfo = $this->getClassInfo($class_id);
+        if ($lession_data && $lession_data["class_id"] == $class_id) {
+            echo view('templates/header', ['title' => $lession_data['less_title']]);
+            echo view('classroom/view_lession', ['lessInfo' => $lession_data, 'classInfo' => $classInfo]);
+            echo view('templates/footer');
+        } else {
+            return "ERROR: NO PERMISSION";
+        }
+    }
+    public function checkAssignment($class_id, $a_id)
+    {
+        $user_id = $this->session->get('id');
+        $works = $this->db->query("SELECT   
+            CONCAT(prefix.prefix, ' ' , users.fname, ' ' , users.lname) AS `name`, 
+            users.std_code, 
+            users.email, 
+            user_assignment.score, 
+            user_assignment.user_id, 
+            assignment_attachments.attach_name, 
+            assignment_attachments.attach_link, 
+            user_assignment.submitted_at
+            FROM
+                user_assignment
+                INNER JOIN
+                users
+                ON 
+                    user_assignment.user_id = users.id
+                LEFT JOIN
+                assignment_attachments
+                ON 
+                    users.id = assignment_attachments.attach_owner AND
+                    user_assignment.a_id = assignment_attachments.assignment_id
+                INNER JOIN
+                prefix
+                ON prefix.prefix_id = users.prefix
+            WHERE
+                user_assignment.`status` = 1 AND
+                user_assignment.a_id = " . $a_id . "
+            ORDER BY user_assignment.submitted_at DESC
+    ")->getResult();
+
+        $files = $this->db->query("SELECT
+        *
+    FROM
+        user_attachments
+        INNER JOIN
+        assignments
+        INNER JOIN
+        user_assignment
+        ON 
+            assignments.a_id = user_assignment.a_id AND
+            user_attachments.ua_owner = user_assignment.user_id
+    WHERE
+        assignments.a_id = " . $a_id . "")->getResult();
+        echo view('templates/header', ['title' => 'ตรวจงาน']);
+        echo view('classroom/check', ['works' => $works, 'files' => $files, 'assignmentID' => $a_id]);
+        echo view('templates/footer');
     }
 }

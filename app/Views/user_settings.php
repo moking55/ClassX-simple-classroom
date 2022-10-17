@@ -1,7 +1,7 @@
 <div class="container" style="max-width: 860px;">
     <div class="text-center py-4">
-        <input type="file" name="avatar_upload" class="d-none" id="avatar_upload">
-        <img src="/img/placeholder-avatar.jpg" onclick="javascript: $('#avatar_upload').click()" class="rounded-circle mb-2" style="height: 200px" alt="user avatar">
+        <input type="file" name="avatar_upload" class="d-none" accept="image/*" id="avatar_upload">
+        <img src="<?= (empty($profile->profile_img))? '/img/placeholder-avatar.jpg' : $profile->profile_img ?>" onclick="javascript: $('#avatar_upload').click()" class="rounded-circle mb-2" id="userAvatar" style="height: 200px;width: 200px;object-fit:cover" alt="user avatar">
         <h4 class="py-3">ยินดีต้อนรับคุณ <?= $profile->fname ?> <?= $profile->lname ?></h4>
         <div class="border rounded p-3">
             <div class="p-3">
@@ -17,13 +17,13 @@
                         </div>
                         <div class="col-5">
                             <div class="form-outline">
-                                <input type="text" id="fname" name="fname" value="<?= $profile->fname ?>" class="form-control"  />
+                                <input type="text" id="fname" name="fname" value="<?= $profile->fname ?>" class="form-control" />
                                 <label class="form-label" for="fname">ชื่อจริง</label>
                             </div>
                         </div>
                         <div class="col-5">
                             <div class="form-outline">
-                                <input type="text" id="lname" value="<?= $profile->lname ?>" name="lname" class="form-control"  />
+                                <input type="text" id="lname" value="<?= $profile->lname ?>" name="lname" class="form-control" />
                                 <label class="form-label" for="lname">นามสกุล</label>
                             </div>
                         </div>
@@ -37,7 +37,7 @@
                         </div>
                         <div class="col-6">
                             <div class="form-outline">
-                                <input type="password" id="password" name="password" class="form-control"  />
+                                <input type="password" id="password" name="password" class="form-control" />
                                 <label class="form-label" for="password">รหัสผ่าน</label>
                             </div>
                         </div>
@@ -49,7 +49,7 @@
                         </div>
                         <div class="col-6">
                             <div class="form-outline">
-                                <input type="email" id="email" name="email" value="<?= $profile->email ?>" class="form-control"  />
+                                <input type="email" id="email" name="email" value="<?= $profile->email ?>" class="form-control" />
                                 <label class="form-label" for="email">อีเมล์</label>
                             </div>
                         </div>
@@ -61,7 +61,7 @@
                         </div>
                         <div class="col-6">
                             <div class="form-outline">
-                                <input type="text" id="telephone" name="telephone" <?= $profile->telephone ?> class="form-control" />
+                                <input type="text" id="telephone" name="telephone" value="<?= $profile->telephone ?>" class="form-control" />
                                 <label class="form-label" for="telephone">เบอร์โทรศัพท์</label>
                             </div>
                         </div>
@@ -76,9 +76,12 @@
 </div>
 
 <script>
+    let avatarURL = null;
+
+
     $('#profileEdit').on('submit', function(e) {
         e.preventDefault();
-        const form_data = {
+        let form_data = {
             password: $('#password').val(),
             email: $('#email').val(),
             prefix: $('#prefix').val(),
@@ -92,14 +95,16 @@
         if (form_data['password'] == '') {
             delete form_data['password'];
         }
+
+        console.log(form_data);
         $.post("/be/updateprofilesetting", form_data,
-            function (data, textStatus, jqXHR) { 
+            function(data, textStatus, jqXHR) {
                 if (data['status'] == true) {
                     Swal.fire({
                         icon: 'success',
                         title: 'ดำเนินการสำเร็จ',
                         text: 'บันทึกข้อมูลสำเร็จแล้ว'
-                    }).then(function (){
+                    }).then(function() {
                         location.reload();
                     });
                 } else {
@@ -112,5 +117,38 @@
             },
             "json"
         );
+    });
+
+    $('#avatar_upload').on('change', function() {
+        let fd = new FormData();
+        const file = $('#avatar_upload')[0].files[0];
+        fd.append('avatar_upload', file);
+        $.ajax({
+            url: '/be/upload_avatar',
+            type: 'post',
+            data: fd,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                $('#userAvatar').attr('src', response['filePath']);
+                const avatarURL = {
+                    profile_img: response['filePath']
+                };
+                $.post("/be/updateprofilesetting", avatarURL,
+                function(data, textStatus, jqXHR) {
+                        console.log(avatarURL);
+                        console.log(data);
+                        if (data['status'] == true) {
+                            Swal.fire({
+                                'icon': 'success',
+                                'title': 'บันทึกรูปโพรไฟล์แล้ว'
+                            });
+                        }
+                    },
+                    "json"
+                );
+
+            },
+        });
     });
 </script>

@@ -49,13 +49,6 @@
                             </div>
                             <img src="<?= (empty($class->profile_img))? '/img/placeholder-avatar.jpg' : $class->profile_img ?>" class="rounded-circle course-owner-img" style="z-index: 1;" alt="">
                             <div class="card-body p-4 position-relative" style="background: white">
-                                <!-- <div class="my-auto">
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#a">asd</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#b">assign</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#c">assign</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#d">assign</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#d">assign</a></small>
-                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -64,7 +57,7 @@
         <?php endif ?>
     </section>
     <h4 class="mt-5">วิชาที่ฉันสอน</h4>
-    <section id="ownedClassRoom">
+    <section id="">
         <?php if (empty($ownedClass)) : ?>
             <div class="d-flex justify-content-center">
                 <div class="my-auto text-center">
@@ -73,7 +66,7 @@
                 </div>
             </div>
         <?php else : ?>
-            <div class="row" id="course-list">
+            <div class="row" id="ownedClassRoom">
                 <?php foreach ($ownedClass as $class) : ?>
                     <div class="col-md-4 p-2 course-grid">
                         <div class="card shadow-0 border h-100">
@@ -87,13 +80,6 @@
                             </div>
                             <img src="<?= (empty($class->class_owner)) ? '/img/placeholder-avatar.jpg' : $class->class_owner ?>" class="rounded-circle course-owner-img" style="z-index: 1;" alt="">
                             <div class="card-body p-4 position-relative" style="background: white">
-                                <!-- <div class="my-auto">
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#a">asd</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#b">assign</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#c">assign</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#d">assign</a></small>
-                                    <small class="d-block"><i class="far fa-sticky-note fa-sm"></i> <a href="#d">assign</a></small>
-                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -180,7 +166,8 @@
 </div>
 <script src="/js/jquery.gridstrap.min.js"></script>
 <script>
-    $('#course-list, #ownedClassRoom').gridstrap();
+    $('#course-list').gridstrap();
+    $('#ownedClassRoom').gridstrap();
 
     $('#createClass').on('submit', function(e) {
         e.preventDefault();

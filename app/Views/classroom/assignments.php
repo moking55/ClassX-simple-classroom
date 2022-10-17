@@ -1,20 +1,33 @@
 <div class="container">
     <div class="row mt-4">
         <div class="col-md-4">
-            <select class="select" data-mdb-filter="true">
-                <option value="0" hidden>วิชาทั้งหมด</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-                <option value="4">Four</option>
-                <option value="5">Five</option>
-                <option value="6">Six</option>
-                <option value="7">Seven</option>
-                <option value="8">Eight</option>
-                <option value="9">Nine</option>
-                <option value="10">Ten</option>
-            </select></div>
+            <select class="select" id="select_class" data-mdb-filter="true">
+                <?php foreach ($classes as $class) : ?>
+                    <option value="<?= $class->class_id ?>"><?= $class->class_name ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
         <div class="col-md-8"></div>
     </div>
 </div>
 
+<div class="container mt-4">
+    <div id="myassignments"></div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        if ($("#select_class").val() != '') {
+            $('#myassignments').load("/be/getassignments?class_id=" + $("#select_class").val());
+        } else {
+            $('#myassignments').text("/be/getassignments");
+        }
+    });
+    $('#select_class').on('change', function() {
+        if ($("#select_class").val() != '') {
+            $('#myassignments').load("/be/getassignments?class_id=" + $("#select_class").val());
+        } else {
+            $('#myassignments').text("/be/getassignments");
+        }
+    });
+</script>

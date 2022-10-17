@@ -1,13 +1,15 @@
 <link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
 <div class="container p-4">
     <div class="card bg-dark text-white">
-        <img src="/img/classroom-cover.jpg" class="card-img" style="height: 240px;object-fit:cover;object-position: center;" alt="Class cover" />
+        <img src="<?= (!empty($classInfo->class_img_cover)) ? $classInfo->class_img_cover : '/img/classroom-cover.jpg' ?>" class="card-img" style="height: 240px;object-fit:cover;object-position: center;" alt="Class cover" />
         <div class="card-img-overlay d-flex flex-row justify-content-between">
             <div class="mt-auto rounded px-3 py-1" style="background: rgba(38,38,38,0.5);">
                 <h3 class="card-title m-0"><?= $classInfo->class_name ?></h3>
                 <p class="card-text m-0"><?= $classInfo->class_code ?></p>
             </div>
-            <a href="#" class="text-muted"><i class="fas fa-cog fa-lg"></i></a>
+            <?php if (session()->get('id') == $classInfo->class_owner) : ?>
+                <a href="/c/<?= $classInfo->class_id ?>/settings" class="text-muted"><i class="fas fa-cog fa-lg"></i></a>
+            <?php endif ?>
         </div>
     </div>
     <section>
@@ -22,9 +24,12 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link" id="ex-with-icons-tab-3" data-mdb-toggle="tab" href="#documents" role="tab" aria-controls="documents" aria-selected="false"><i class="fas fa-paperclip fa-fw me-2"></i>สื่อการสอน</a>
             </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="ex-with-icons-tab-3" data-mdb-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="false"><i class="fas fa-folder fa-fw me-2"></i>ไฟล์ทั้งหมด</a>
-            </li>
+            <?php if (session()->get('id') == $classInfo->class_owner) : ?>
+
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="ex-with-icons-tab-3" data-mdb-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="false"><i class="fas fa-folder fa-fw me-2"></i>ไฟล์ทั้งหมด</a>
+                </li>
+            <?php endif ?>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" id="ex-with-icons-tab-3" data-mdb-toggle="tab" href="#attendance" role="tab" aria-controls="attendance" aria-selected="false"><i class="fas fa-users fa-fw me-2"></i>บุคคล</a>
             </li>
@@ -44,14 +49,14 @@
                                     <a href="javascript: Swal.fire({html:`<h1 style='font-size: 80pt'><?= $classInfo->class_invite ?></h1>`,showConfirmButton:false})"><i class="fas fa-expand"></i></a>
                                 </div>
                             </div>
-                            <?php foreach ($meeting as $meet): ?>
+                            <?php foreach ($meeting as $meet) : ?>
                                 <div class="border rounded p-3 bg-primary text-light mt-2">
-                                <p class="my-1">การประชุมในห้องเรียน</p>
-                                <h4><?= $meet->meet_name ?></h4>
-                                <div class="d-flex justify-content-end">
-                                    <a class="text-light" href="/meeting?meetID=<?= $meet->meet_invite ?>"><small>เข้าร่วม <i class="fas fa-arrow-right fa-sm"></i></small></a>
+                                    <p class="my-1">การประชุมในห้องเรียน</p>
+                                    <h4><?= $meet->meet_name ?></h4>
+                                    <div class="d-flex justify-content-end">
+                                        <a class="text-light" href="/meeting?meetID=<?= $meet->meet_invite ?>"><small>เข้าร่วม <i class="fas fa-arrow-right fa-sm"></i></small></a>
+                                    </div>
                                 </div>
-                            </div>
                             <?php endforeach; ?>
                         </div>
                         <div class="col-md-9">
@@ -131,74 +136,90 @@
                                     <tr>
                                         <th>ลำดับ</th>
                                         <th>ชื่องาน</th>
+                                        <th>กำหนดส่ง</th>
                                         <th>ส่งแล้ว</th>
-                                        <th>ยังไม่ได้ส่ง</th>
                                         <th>คะแนน</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td><a href="">awd</a></td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>10</td>
-                                    </tr>
+                                    <?php foreach ($assignments as $key => $assigned) : ?>
+                                        <tr>
+                                            <td><?= $key + 1 ?></td>
+                                            <td><a href="<?= $class_id ?>/check/<?= $assigned->a_id ?>"><?= $assigned->a_name ?></a></td>
+                                            <td><?= $assigned->due_date ?></td>
+                                            <td><?= $assigned->status ?></td>
+                                            <td><?= $assigned->user_score ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
                     </section>
                 <?php else : ?>
                     <section>
-                        <h5 class="mt-3">ยังไม่ได้ส่ง</h5>
+                        <h4 class="py-4">ยังไม่ได้ส่ง</h4>
                         <ul class="list-group list-group-light my-3">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <!-- <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
                                     <img src="/img/school-bag.png" class="rounded-circle" alt="" style="width: 45px; height: 45px" />
                                     <div class="ms-3">
-                                        <a class="fw-bold my-auto" data-mdb-toggle="modal" style="cursor: pointer" data-mdb-target="#assignmentModal">Kate sadas</a>
+                                        <a class="fw-bold my-auto" style="cursor: pointer">Kate sadas</a>
                                     </div>
                                 </div>
                                 <span class="badge rounded-pill badge-danger"><i class="fas fa-times fa-fw me-1"></i>เลยกำหนด</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <img src="/img/school-bag.png" class="rounded-circle" alt="" style="width: 45px; height: 45px" />
-                                    <div class="ms-3">
-                                        <p class="fw-bold mb-1">Kate Hunington</p>
+                            </li> -->
+                            <?php foreach ($assignments as $work) : ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img src="/img/school-bag.png" class="rounded-circle" alt="<?= $work->a_name ?>" style="width: 45px; height: 45px" />
+                                        <div class="ms-3">
+                                            <a class="fw-bold mb-1" href="javascript: showModal(<?= $work->a_id ?>)"> <?= $work->a_name ?></a>
+                                        </div>
                                     </div>
-                                </div>
-                                <span class="badge rounded-pill badge-warning"><i class="fas fa-clock fa-fw me-1"></i>กำหนดส่ง 9 / 10 / 2022</span>
-                            </li>
-                        </ul>
-                        <h5>ส่งแล้ว</h5>
-                        <ul class="list-group list-group-light my-3">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <img src="/img/school-bag.png" class="rounded-circle" alt="" style="width: 45px; height: 45px" />
-                                    <div class="ms-3">
-                                        <p class="fw-bold mb-1">Kate Hunington</p>
-                                    </div>
-                                </div>
-                                <span class="badge rounded-pill badge-success"><i class="fas fa-check fa-fw me-1"></i>ส่งแล้ว</span>
-                            </li>
+                                </li>
+                            <?php endforeach; ?>
                         </ul>
                     </section>
+
+                    <div class="modal top fade" id="assignmentModal" tabindex="-1" aria-labelledby="assignmentModal" aria-hidden="true" data-mdb-backdrop="true" data-mdb-keyboard="false">
+                        <div class="modal-dialog modal-fullscreen ">
+                            <div class="modal-content">
+                                <div class="modal-header border-0 px-4 py-4">
+                                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body" id="assignmentInfo">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 <?php endif; ?>
 
             </div>
             <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="ex-with-icons-tab-3">
-                <h5>เนื้อหาภายในบทเรียน</h5>
-                <ul class="list-group list-group-light my-3">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <img src="/img/school-bag.png" class="rounded-circle" alt="" style="width: 45px; height: 45px" />
-                            <div class="ms-3">
-                                <p class="fw-bold mb-1">Kate Hunington</p>
-                            </div>
+                <div class="py-4 d-flex justify-content-between">
+                    <h4>เนื้อหาภายในบทเรียน</h4>
+                    <?php if (session()->get('id') == $classInfo->class_owner) : ?>
+                        <div class="dropdown">
+                            <button class="btn btn-success btn-rounded" type="button" id="assignmentType" data-mdb-toggle="dropdown" aria-expanded="false"><i class="fas fa-plus fa-fw me-1"></i> สร้าง</button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="assignmentType">
+                                <li><a class="dropdown-item" href="/c/<?= $class_id ?>/create_lession?type=1"><i class="fas fa-cloud-upload-alt me-2"></i>เพิ่มเนื้อหา</a></li>
+                            </ul>
                         </div>
-                        <i class="fas fa-chevron-right"></i></a>
-                    </li>
+                    <?php endif ?>
+                </div>
+                <ul class="list-group list-group-light my-3">
+                    <?php foreach ($lessions as $lession) : ?>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="/img/book.jpg" class="rounded-circle" alt="" style="width: 45px; height: 45px" />
+                                <div class="ms-3">
+                                    <a class="fw-bold mb-1" href="<?= $classInfo->class_id ?>/lession?id=<?= $lession['les_id'] ?>"><?= $lession['less_title'] ?></a>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i></a>
+                        </li>
+                    <?php endforeach ?>
                 </ul>
 
             </div>
@@ -211,16 +232,18 @@
                                 <th>ชื่อ</th>
                                 <th>ขนาด</th>
                                 <th>วันที่สร้าง</th>
-                                <th>ตัวเลือก</th>
+                                <th>เจ้าของ</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>test</td>
-                                <td>1 KB</td>
-                                <td>s</td>
-                                <td>s</td>
-                            </tr>
+                            <?php foreach ($files as $file) : ?>
+                                <tr>
+                                    <td><a href="<?= $file->attach_link ?>" target="_blank"><?= $file->attach_name ?></a></td>
+                                    <td><?= $file->attach_size ?> MB</td>
+                                    <td><?= $file->uploaded_at ?></td>
+                                    <td><?= $file->name ?></td>
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -231,7 +254,7 @@
                 <ul class="list-group list-group-light mb-4">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <img src="https://mdbootstrap.com/img/new/avatars/8.jpg" alt="" style="width: 45px; height: 45px" class="rounded-circle" />
+                            <img src="" alt="" style="width: 45px; height: 45px" class="rounded-circle" />
                             <div class="ms-3">
                                 <p class="fw-bold mb-1"><?= $classInfo->owner_name ?></p>
                             </div>
@@ -245,7 +268,7 @@
                     <?php foreach ($classMembers as $classMember) : ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
-                                <img src="https://mdbootstrap.com/img/new/avatars/9.jpg" alt="" style="width: 45px; height: 45px" class="rounded-circle" />
+                                <img src="<?= (empty($classMember->profile_img)) ? '/img/placeholder-avatar.jpg' : $classMember->profile_img ?>" alt="" style="width: 45px; height: 45px" class="rounded-circle" />
                                 <div class="ms-3">
                                     <p class="fw-bold mb-1"><?= $classMember->name ?> (<?= $classMember->nickname ?>)</p>
                                     <?php if (!empty($classMember->std_code)) : ?>
@@ -270,41 +293,8 @@
             <div class="modal-header border-0 px-4 py-4">
                 <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="container mt-4">
-                    <div class="row gy-3">
-                        <div class="col-md-6 d-flex order-md-1 justify-content-between">
-                            <div>
-                                <h5 class="mb-1">คะแนน</h5>
-                                <small>10 คะแนนที่เป็นไปได้</small>
-                            </div>
-                            <div><button class="btn btn-primary d-inline js-confetti" style="z-index: 10000" type="button">ส่งงาน</button></div>
-                        </div>
-                        <div class="col-md-6 order-md-0">
-                            <h3 class="mb-1">การบ้าน 2</h3>
-                            <small>กำหนดส่ง asd</small>
-                            <br><br>
-                            <h6 class="mb-1">คำแนะนำ</h6>
-                            <small><i>ไม่มีคำแนะนำ</i></small>
-                            <br><br>
-                            <h6 class="mb-1">ไฟล์แนบ</h6>
-                            <small><i>ไม่มีไฟล์</i></small>
-                            <br><br>
-                            <h6 class="mb-2">งานของฉัน</h6>
-                            <input type="file" id="assign-file-upload" style="display: none;">
-                            <div class="dropdown">
-                                <button class="btn btn-outline-info btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-mdb-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-paperclip fa-fw me-1"></i>แนบ
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <li><a class="dropdown-item text-muted" href="#"><i class="fas fa-link fa-fw me-1"></i>ลิ้ง</a></li>
-                                    <li><a class="dropdown-item text-muted" onclick="javascript: $('#assign-file-upload').click()" type="button"><i class="fas fa-upload fa-fw me-1"></i>ไฟล์</a></li>
-                                </ul>
-                            </div>
-                        </div>
+            <div class="modal-body" id="assignmentInfo">
 
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -322,6 +312,11 @@
             clearInterval(delayShow);
         }, 1400);
     });
+
+    function showModal(a_id) {
+        $('#assignmentInfo').load('/be/viewassignment?a_id=' + a_id);
+        $('#assignmentModal').modal('show');
+    }
 
     /* Create Class Posts */
     $("#createPost").on('submit', function(e) {

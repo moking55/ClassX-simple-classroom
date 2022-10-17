@@ -17,6 +17,7 @@ class AssignmentModel extends Model
         'a_classid',
         'a_name',
         'a_instruction',
+        'due_date',
         'a_score',
         'status'
     ];

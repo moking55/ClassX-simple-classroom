@@ -89,8 +89,42 @@ class SqlCommands extends BaseController
         	ON 
         		classroom.class_owner = users.id
         WHERE
-        	class_attendance.user_id = ".$user_id.";
+        	class_attendance.user_id = " . $user_id . " AND
+            classroom.deleted_at IS NULL AND
+        	classroom.`status` = 1 AND
+            class_attendance.leave_at IS NULL
 
         ")->getResult();
     }
+
+    protected function getAssignmentList($class_id, $user_id)
+    {
+        if (!empty($user_id)) {
+            $classSearch = (!empty($class_id)) ? "assignments.a_classid =" . $class_id . " AND " : null;
+            $result = $this->db->query("SELECT
+                classroom.class_id,
+                classroom.class_name,
+                assignments.a_name,
+                assignments.a_id,
+                assignments.a_instruction,
+                assignments.a_score `assign_score`,
+                IFNULL( user_assignment.score, 0 ) AS `user_score`,
+                IFNULL( user_assignment.`status`, 0 ) AS `status`,
+                assignments.due_date 
+            FROM
+                assignments
+                LEFT JOIN user_assignment ON assignments.a_id = user_assignment.a_id 
+                AND user_assignment.user_id = " . $user_id . " 
+                INNER JOIN
+                classroom
+                ON
+                    assignments.a_classid = classroom.class_id
+            WHERE
+                " . $classSearch . "
+                assignments.due_date > NOW() 
+            HAVING `status` = 0")->getResult();
+            return $result;
+        }
+    }
+    
 }

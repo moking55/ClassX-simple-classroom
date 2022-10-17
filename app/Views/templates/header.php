@@ -21,6 +21,7 @@
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="/js/useractions.js"></script>
+    <script src="/js/egg.min.js"></script>
 
 </head>
 
@@ -41,6 +42,9 @@
                     <?php if (session()->has('id')) : ?>
                         <li class="nav-item">
                             <a class="nav-link" href="/assignments">งานที่มอบหมาย</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/u/scores">คะแนน</a>
                         </li>
                     <?php endif ?>
                     <li class="nav-item">

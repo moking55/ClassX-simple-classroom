@@ -1,13 +1,11 @@
 <?php
 
 namespace App\Models;
-
 use CodeIgniter\Model;
-
-class RegisterModel extends Model
+class LessionModel extends Model
 {
-    protected $table      = 'users';
-    protected $primaryKey = 'id';
+    protected $table      = 'class_lession';
+    protected $primaryKey = 'les_id';
 
     protected $useAutoIncrement = true;
 
@@ -15,17 +13,9 @@ class RegisterModel extends Model
     protected $useSoftDeletes = true;
 
     protected $allowedFields = [
-        'email',
-        'fname',
-        'lname',
-        'nickname',
-        'password',
-        'prefix',
-        'std_code',
-        'profile_img',
-        'telephone',
-        'university_id',
-        'username'
+        'class_id',
+        'less_title',
+        'less_content'
     ];
 
     protected $useTimestamps = true;

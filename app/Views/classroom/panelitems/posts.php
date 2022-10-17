@@ -3,7 +3,7 @@
         <div class="card shadow-0 border my-2">
             <div class="card-header d-flex">
                 <div class="my-auto">
-                    <img src="<?= (empty($stream->profile_img))? '/img/placeholder-avatar.jpg' : $stream->profile_img ?>" style="width: 42px" class="me-2 rounded-circle" alt="" />
+                    <img src="<?= (empty($stream->profile_img))? '/img/placeholder-avatar.jpg' : $stream->profile_img ?>" style="width: 42px;height: 42px; object-fit: cover" class="me-2 rounded-circle" alt="" />
                     <p class="text-black d-inline mb-0"><?= $stream->name ?></p> <span><small class="text-muted d-inline">เมื่อ <?= $stream->created_at ?></small></span>
                 </div>
             </div>

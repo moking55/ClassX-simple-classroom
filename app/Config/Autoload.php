@@ -64,7 +64,9 @@ class Autoload extends AutoloadConfig
      *
      * @var array<string, string>
      */
-    public $classmap = [];
+    public $classmap = [
+        'AWS S3' => 'Aws\S3\S3Client'
+    ];
 
     /**
      * -------------------------------------------------------------------
