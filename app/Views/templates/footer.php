@@ -1,5 +1,5 @@
 <div class="py-3 text-muted text-center text-muted">
-    <small>ใช้สำหรับศึกษาวิชาฐานข้อมูล อ.อรรถวิทย์ ชังคมานนธ์ เท่านั้น</small>
+    <small>ใช้สำหรับศึกษาวิชาฐานข้อมูล อ.อรรถวิท ชังคมานนท์ เท่านั้น</small>
 </div>
 <!-- Load JS -->
 <script src="/js/mdb.min.js"></script>

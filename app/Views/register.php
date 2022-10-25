@@ -104,11 +104,11 @@
             telephone: $('#telephone').val(),
             university_id: $('#university').val(),
         }
-
+        
+        $("#loadingpage").show();
+        $("#regisForm").hide();
         $.post('/register', form_data,
-            function(data, textStatus, jqXHR) {
-                $("#loadingpage").show();
-                $("#regisForm").hide();
+        function(data, textStatus, jqXHR) {
                 if (data['status']) {
                     Swal.fire({
                         icon: 'success',
